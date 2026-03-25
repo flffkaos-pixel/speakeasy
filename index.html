@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Tools - Free TTS & STT</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 2rem; margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        
+        .tabs { display: flex; border-bottom: 1px solid #eee; }
+        .tab { flex: 1; padding: 20px; text-align: center; cursor: pointer; font-weight: 600; color: #666; transition: all 0.3s; }
+        .tab.active { color: #667eea; border-bottom: 3px solid #667eea; }
+        
+        .content { padding: 30px; }
+        .section { display: none; }
+        .section.active { display: block; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        select, textarea, input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; transition: border-color 0.3s; }
+        select:focus, textarea:focus, input:focus { outline: none; border-color: #667eea; }
+        textarea { min-height: 150px; resize: vertical; }
+        
+        .btn { display: inline-block; padding: 15px 40px; background: #667eea; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; margin: 5px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-secondary { background: #764ba2; }
+        
+        .status { padding: 15px; background: #f5f5f5; border-radius: 10px; margin-top: 20px; text-align: center; color: #666; }
+        .status.recording { background: #fee; color: #c00; animation: pulse 1s infinite; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .audio-player { width: 100%; margin-top: 20px; }
+        
+        .languages { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .lang-tag { padding: 5px 15px; background: #f0f0f0; border-radius: 20px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Voice Tools</h1>
+            <p>Free TTS & STT - Multiple Languages</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="tts">TTS (Text to Speech)</div>
+            <div class="tab" data-tab="stt">STT (Speech to Text)</div>
+        </div>
+        
+        <div class="content">
+            <!-- TTS Section -->
+            <div class="section active" id="tts-section">
+                <div class="form-group">
+                    <label>Select Language</label>
+                    <select id="tts-lang">
+                        <option value="ko-KR">Korean (한국어)</option>
+                        <option value="en-US">English</option>
+                        <option value="ja-JP">Japanese (日本語)</option>
+                        <option value="zh-CN">Chinese (中文)</option>
+                        <option value="es-ES">Spanish (Español)</option>
+                        <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
+                        <option value="th-TH">Thai (ไทย)</option>
+                        <option value="fr-FR">French (Français)</option>
+                        <option value="de-DE">German (Deutsch)</option>
+                        <option value="ru-RU">Russian (Русский)</option>
+                        <option value="ar-SA">Arabic (العربية)</option>
+                        <option value="pt-BR">Portuguese (Português)</option>
+                        <option value="it-IT">Italian (Italiano)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Voice Speed</label>
+                    <input type="range" id="tts-speed" min="0.5" max="2" step="0.1" value="1" style="width:100%">
+                    <div style="text-align: center; margin-top: 5px;"><span id="speed-val">1.0</span>x</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Enter Text</label>
+                    <textarea id="tts-text" placeholder="Enter text to convert to speech..."></textarea>
+                </div>
+                
+                <button id="tts-speak" class="btn">🔊 Speak</button>
+                <button id="tts-stop" class="btn btn-secondary">⏹ Stop</button>
+                
+                <div class="status" id="tts-status">Ready</div>
+            </div>
+            
+            <!-- STT Section -->
+            <div class="section" id="stt-section">
+                <div class="form-group">
+                    <label>Select Language</label>
+                    <select id="stt-lang">
+                        <option value="ko-KR">Korean (한국어)</option>
+                        <option value="en-US">English</option>
+                        <option value="ja-JP">Japanese (日本語)</option>
+                        <option value="zh-CN">Chinese (中文)</option>
+                        <option value="es-ES">Spanish (Español)</option>
+                        <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
+                        <option value="th-TH">Thai (ไทย)</option>
+                    </select>
+                </div>
+                
+                <button id="stt-start" class="btn">🎤 Start Recording</button>
+                <button id="stt-stop" class="btn btn-secondary" disabled>⏹ Stop</button>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Result</label>
+                    <textarea id="stt-result" placeholder="Speech will appear here..."></textarea>
+                </div>
+                
+                <button id="stt-copy" class="btn">📋 Copy</button>
+                
+                <div class="status recording" id="stt-status">Click Start to begin recording</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + '-section').classList.add('active');
+            });
+        });
+
+        // TTS
+        const synth = window.speechSynthesis;
+        let currentUtterance = null;
+
+        document.getElementById('tts-speed').addEventListener('input', (e) => {
+            document.getElementById('speed-val').textContent = e.target.value;
+        });
+
+        document.getElementById('tts-speak').addEventListener('click', () => {
+            const text = document.getElementById('tts-text').value;
+            if (!text) {
+                document.getElementById('tts-status').textContent = 'Please enter text first';
+                return;
+            }
+            
+            if (synth.speaking) synth.cancel();
+            
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = document.getElementById('tts-lang').value;
+            currentUtterance.rate = parseFloat(document.getElementById('tts-speed').value);
+            
+            currentUtterance.onstart = () => {
+                document.getElementById('tts-status').textContent = '🔊 Speaking...';
+            };
+            
+            currentUtterance.onend = () => {
+                document.getElementById('tts-status').textContent = '✅ Done!';
+                setTimeout(() => document.getElementById('tts-status').textContent = 'Ready', 2000);
+            };
+            
+            synth.speak(currentUtterance);
+        });
+
+        document.getElementById('tts-stop').addEventListener('click', () => {
+            synth.cancel();
+            document.getElementById('tts-status').textContent = '⏹ Stopped';
+        });
+
+        // STT
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            
+            recognition.onstart = () => {
+                document.getElementById('stt-status').textContent = '🎤 Recording...';
+                document.getElementById('stt-status').classList.add('recording');
+                document.getElementById('stt-start').disabled = true;
+                document.getElementById('stt-stop').disabled = false;
+            };
+            
+            recognition.onresult = (event) => {
+                let result = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    result += event.results[i][0].transcript;
+                }
+                document.getElementById('stt-result').value = result;
+            };
+            
+            recognition.onerror = (event) => {
+                document.getElementById('stt-status').textContent = 'Error: ' + event.error;
+            };
+            
+            recognition.onend = () => {
+                document.getElementById('stt-status').textContent = '✅ Recording stopped';
+                document.getElementById('stt-status').classList.remove('recording');
+                document.getElementById('stt-start').disabled = false;
+                document.getElementById('stt-stop').disabled = true;
+            };
+        } else {
+            document.getElementById('stt-status').textContent = '❌ Speech recognition not supported in this browser';
+        }
+
+        document.getElementById('stt-start').addEventListener('click', () => {
+            if (recognition) {
+                recognition.lang = document.getElementById('stt-lang').value;
+                recognition.start();
+            }
+        });
+
+        document.getElementById('stt-stop').addEventListener('click', () => {
+            if (recognition) recognition.stop();
+        });
+
+        document.getElementById('stt-copy').addEventListener('click', () => {
+            const text = document.getElementById('stt-result').value;
+            navigator.clipboard.writeText(text);
+            document.getElementById('stt-status').textContent = '✅ Copied to clipboard!';
+        });
+    </script>
+</body>
+</html>
