@@ -33,6 +33,13 @@
         .btn-success { background: #28a745; }
         .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
         
+        .emotion-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+        .emotion-btn { padding: 15px 10px; border: 2px solid #eee; border-radius: 10px; background: white; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .emotion-btn:hover { border-color: #667eea; }
+        .emotion-btn.active { border-color: #667eea; background: #f0f4ff; }
+        .emotion-btn span { font-size: 1.5rem; display: block; }
+        .emotion-btn small { font-size: 0.8rem; color: #666; }
+        
         .status { padding: 15px; background: #f5f5f5; border-radius: 10px; margin-top: 20px; text-align: center; color: #666; }
         .status.recording { background: #fee; color: #c00; animation: pulse 1s infinite; }
         .status.success { background: #efe; color: #060; }
@@ -82,9 +89,53 @@
                 </div>
                 
                 <div class="form-group">
+                    <label>Emotion</label>
+                    <div class="emotion-grid">
+                        <button class="emotion-btn active" data-emotion="neutral">
+                            <span>😐</span>
+                            <small>Neutral</small>
+                        </button>
+                        <button class="emotion-btn" data-emotion="happy">
+                            <span>😊</span>
+                            <small>Happy</small>
+                        </button>
+                        <button class="emotion-btn" data-emotion="sad">
+                            <span>😢</span>
+                            <small>Sad</small>
+                        </button>
+                        <button class="emotion-btn" data-emotion="angry">
+                            <span>😠</span>
+                            <small>Angry</small>
+                        </button>
+                        <button class="emotion-btn" data-emotion="excited">
+                            <span>🤩</span>
+                            <small>Excited</small>
+                        </button>
+                        <button class="emotion-btn" data-emotion="calm">
+                            <span>😌</span>
+                            <small>Calm</small>
+                        </button>
+                        <button class="emotion-btn" data-emotion="scared">
+                            <span>😨</span>
+                            <small>Scared</small>
+                        </button>
+                        <button class="emotion-btn" data-emotion="whisper">
+                            <span>🤫</span>
+                            <small>Whisper</small>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
                     <label>Voice Speed</label>
                     <input type="range" id="tts-speed" min="0.5" max="2" step="0.1" value="1" style="width:100%">
                     <div style="text-align: center; margin-top: 5px;"><span id="speed-val">1.0</span>x</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Pitch</label>
+                    <input type="range" id="tts-pitch" min="0.5" max="2" step="0.1" value="1" style="width:100%">
+                    <div style="text-align: center; margin-top: 5px;"><span id="pitch-val">1.0</span></div>
                 </div>
                 
                 <div class="form-group">
@@ -158,6 +209,28 @@
             });
         });
 
+        // Emotion selection
+        let currentEmotion = 'neutral';
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentEmotion = btn.dataset.emotion;
+            });
+        });
+
+        // Emotion settings
+        const emotionSettings = {
+            neutral: { rate: 1, pitch: 1, volume: 1 },
+            happy: { rate: 1.1, pitch: 1.1, volume: 1 },
+            sad: { rate: 0.9, pitch: 0.9, volume: 0.8 },
+            angry: { rate: 1.1, pitch: 1.2, volume: 1 },
+            excited: { rate: 1.3, pitch: 1.2, volume: 1 },
+            calm: { rate: 0.9, pitch: 1, volume: 0.9 },
+            scared: { rate: 1.2, pitch: 1.3, volume: 0.9 },
+            whisper: { rate: 0.8, pitch: 0.8, volume: 0.5 }
+        };
+
         // Language detection
         const langPatterns = {
             'ko-KR': /[가-힣]/,
@@ -201,7 +274,10 @@
             document.getElementById('speed-val').textContent = e.target.value;
         });
 
-        // For audio recording during TTS
+        document.getElementById('tts-pitch').addEventListener('input', (e) => {
+            document.getElementById('pitch-val').textContent = e.target.value;
+        });
+
         async function setupAudioRecording() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -232,7 +308,6 @@
             
             if (synth.speaking) synth.cancel();
             
-            // Setup recording
             await setupAudioRecording();
             if (mediaRecorder && mediaRecorder.state === 'inactive') {
                 mediaRecorder.start();
@@ -246,10 +321,18 @@
             }
             
             utterance.lang = lang;
-            utterance.rate = parseFloat(document.getElementById('tts-speed').value);
+            
+            // Apply emotion settings + user preferences
+            const emotion = emotionSettings[currentEmotion];
+            const userRate = parseFloat(document.getElementById('tts-speed').value);
+            const userPitch = parseFloat(document.getElementById('tts-pitch').value);
+            
+            utterance.rate = emotion.rate * userRate;
+            utterance.pitch = emotion.pitch * userPitch;
+            utterance.volume = emotion.volume;
             
             utterance.onstart = () => {
-                document.getElementById('tts-status').textContent = `🔊 Speaking in ${lang}...`;
+                document.getElementById('tts-status').textContent = `🔊 Speaking with ${currentEmotion} emotion...`;
             };
             
             utterance.onend = () => {
@@ -271,7 +354,16 @@
             document.getElementById('tts-status').textContent = '⏹ Stopped';
         });
 
-        // Download buttons
+        function downloadBlob(blob, filename, mimeType) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            document.getElementById('tts-status').textContent = `✅ Downloaded ${filename}`;
+        }
+
         document.getElementById('dl-mp3').addEventListener('click', () => {
             if (audioBlob) downloadBlob(audioBlob, 'speech.mp3', 'audio/mp3');
         });
@@ -284,16 +376,6 @@
             if (audioBlob) downloadBlob(audioBlob, 'speech.ogg', 'audio/ogg');
         });
 
-        function downloadBlob(blob, filename, mimeType) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-            document.getElementById('tts-status').textContent = `✅ Downloaded ${filename}`;
-        }
-
         // STT - File upload
         document.getElementById('audio-file').addEventListener('change', async (e) => {
             const files = e.target.files;
@@ -302,7 +384,6 @@
             document.getElementById('file-list').innerHTML = `<p>📄 ${files[0].name}</p>`;
             document.getElementById('stt-status').textContent = '🔄 Processing...';
             
-            // Use Web Speech API
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.continuous = true;
             recognition.interimResults = true;
@@ -377,7 +458,6 @@
         document.getElementById('export-doc').addEventListener('click', () => {
             const text = getText();
             if (!text) return;
-            // Simple DOC-like HTML
             const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre>${text}</pre></body></html>`;
             const blob = new Blob([html], { type: 'application/msword' });
             downloadBlob(blob, 'transcript.doc', 'application/msword');
@@ -386,11 +466,7 @@
         document.getElementById('export-json').addEventListener('click', () => {
             const text = getText();
             if (!text) return;
-            const data = {
-                text: text,
-                timestamp: new Date().toISOString(),
-                language: 'auto'
-            };
+            const data = { text: text, timestamp: new Date().toISOString(), language: 'auto' };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             downloadBlob(blob, 'transcript.json', 'application/json');
         });
@@ -398,12 +474,7 @@
         document.getElementById('export-srt').addEventListener('click', () => {
             const text = getText();
             if (!text) return;
-            // Simple SRT format
-            const srt = `1
-00:00:00,000 --> 00:00:10,000
-${text}
-
-`;
+            const srt = `1\n00:00:00,000 --> 00:00:10,000\n${text}\n\n`;
             const blob = new Blob([srt], { type: 'text/srt' });
             downloadBlob(blob, 'transcript.srt', 'text/srt');
         });
