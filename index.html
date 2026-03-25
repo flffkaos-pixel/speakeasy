@@ -33,12 +33,17 @@
         .btn-success { background: #28a745; }
         .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
         
-        .emotion-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
-        .emotion-btn { padding: 15px 10px; border: 2px solid #eee; border-radius: 10px; background: white; cursor: pointer; transition: all 0.3s; text-align: center; }
-        .emotion-btn:hover { border-color: #667eea; }
-        .emotion-btn.active { border-color: #667eea; background: #f0f4ff; }
-        .emotion-btn span { font-size: 1.5rem; display: block; }
-        .emotion-btn small { font-size: 0.8rem; color: #666; }
+        .option-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .option-btn { padding: 15px 10px; border: 2px solid #eee; border-radius: 10px; background: white; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .option-btn:hover { border-color: #667eea; }
+        .option-btn.active { border-color: #667eea; background: #f0f4ff; }
+        .option-btn span { font-size: 1.5rem; display: block; }
+        .option-btn small { font-size: 0.8rem; color: #666; }
+        
+        .age-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+        .age-btn { padding: 12px 5px; border: 2px solid #eee; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; text-align: center; font-size: 0.9rem; }
+        .age-btn:hover { border-color: #667eea; }
+        .age-btn.active { border-color: #667eea; background: #f0f4ff; }
         
         .status { padding: 15px; background: #f5f5f5; border-radius: 10px; margin-top: 20px; text-align: center; color: #666; }
         .status.recording { background: #fee; color: #c00; animation: pulse 1s infinite; }
@@ -46,8 +51,6 @@
         
         .file-upload { border: 2px dashed #667eea; padding: 30px; text-align: center; border-radius: 10px; cursor: pointer; }
         .file-upload:hover { background: #f5f5ff; }
-        
-        .detected { font-size: 0.9rem; color: #667eea; margin-top: 5px; }
         
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
@@ -68,9 +71,8 @@
             <!-- TTS Section -->
             <div class="section active" id="tts-section">
                 <div class="form-group">
-                    <label>Language (Auto-detected from text)</label>
+                    <label>Select Language (Voice Language)</label>
                     <select id="tts-lang">
-                        <option value="auto">🔍 Auto Detect</option>
                         <option value="ko-KR">Korean (한국어)</option>
                         <option value="en-US">English</option>
                         <option value="ja-JP">Japanese (日本語)</option>
@@ -85,44 +87,31 @@
                         <option value="pt-BR">Portuguese (Português)</option>
                         <option value="it-IT">Italian (Italiano)</option>
                     </select>
-                    <div class="detected" id="detected-lang"></div>
                 </div>
                 
                 <div class="form-group">
-                    <label>Emotion</label>
-                    <div class="emotion-grid">
-                        <button class="emotion-btn active" data-emotion="neutral">
-                            <span>😐</span>
-                            <small>Neutral</small>
+                    <label>Gender</label>
+                    <div class="option-grid">
+                        <button class="option-btn active" data-gender="male">
+                            <span>👨</span>
+                            <small>Male</small>
                         </button>
-                        <button class="emotion-btn" data-emotion="happy">
-                            <span>😊</span>
-                            <small>Happy</small>
+                        <button class="option-btn" data-gender="female">
+                            <span>👩</span>
+                            <small>Female</small>
                         </button>
-                        <button class="emotion-btn" data-emotion="sad">
-                            <span>😢</span>
-                            <small>Sad</small>
-                        </button>
-                        <button class="emotion-btn" data-emotion="angry">
-                            <span>😠</span>
-                            <small>Angry</small>
-                        </button>
-                        <button class="emotion-btn" data-emotion="excited">
-                            <span>🤩</span>
-                            <small>Excited</small>
-                        </button>
-                        <button class="emotion-btn" data-emotion="calm">
-                            <span>😌</span>
-                            <small>Calm</small>
-                        </button>
-                        <button class="emotion-btn" data-emotion="scared">
-                            <span>😨</span>
-                            <small>Scared</small>
-                        </button>
-                        <button class="emotion-btn" data-emotion="whisper">
-                            <span>🤫</span>
-                            <small>Whisper</small>
-                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Age</label>
+                    <div class="age-grid">
+                        <button class="age-btn" data-age="10">10s</button>
+                        <button class="age-btn" data-age="20">20s</button>
+                        <button class="age-btn active" data-age="30">30s</button>
+                        <button class="age-btn" data-age="40">40s</button>
+                        <button class="age-btn" data-age="50">50s</button>
+                        <button class="age-btn" data-age="60">60s</button>
                     </div>
                 </div>
                 
@@ -133,20 +122,14 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Pitch</label>
-                    <input type="range" id="tts-pitch" min="0.5" max="2" step="0.1" value="1" style="width:100%">
-                    <div style="text-align: center; margin-top: 5px;"><span id="pitch-val">1.0</span></div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Enter Text (Any Language)</label>
-                    <textarea id="tts-text" placeholder="Type in any language - we'll detect it automatically!"></textarea>
+                    <label>Enter Text</label>
+                    <textarea id="tts-text" placeholder="Enter text to convert to speech..."></textarea>
                 </div>
                 
                 <button id="tts-speak" class="btn">🔊 Speak</button>
                 <button id="tts-stop" class="btn btn-secondary">⏹ Stop</button>
                 
-                <div class="status" id="tts-status">Ready - Type text and click Speak</div>
+                <div class="status" id="tts-status">Ready - Enter text and click Speak</div>
                 
                 <div class="form-group" style="margin-top: 20px;">
                     <label>Download Audio</label>
@@ -160,6 +143,32 @@
             
             <!-- STT Section -->
             <div class="section" id="stt-section">
+                <div class="form-group">
+                    <label>Audio Language (Input)</label>
+                    <select id="stt-input-lang">
+                        <option value="ko-KR">Korean (한국어)</option>
+                        <option value="en-US">English</option>
+                        <option value="ja-JP">Japanese (日本語)</option>
+                        <option value="zh-CN">Chinese (中文)</option>
+                        <option value="es-ES">Spanish (Español)</option>
+                        <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
+                        <option value="th-TH">Thai (ไทย)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Output Language (Translation)</label>
+                    <select id="stt-output-lang">
+                        <option value="ko-KR">Korean (한국어)</option>
+                        <option value="en-US">English</option>
+                        <option value="ja-JP">Japanese (日本語)</option>
+                        <option value="zh-CN">Chinese (中文)</option>
+                        <option value="es-ES">Spanish (Español)</option>
+                        <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
+                        <option value="th-TH">Thai (ไทย)</option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label>Upload Audio/Video File</label>
                     <div class="file-upload" onclick="document.getElementById('audio-file').click()">
@@ -209,73 +218,59 @@
             });
         });
 
-        // Emotion selection
-        let currentEmotion = 'neutral';
-        document.querySelectorAll('.emotion-btn').forEach(btn => {
+        // Gender selection
+        let currentGender = 'male';
+        document.querySelectorAll('.option-btn[data-gender]').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.option-btn[data-gender]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                currentEmotion = btn.dataset.emotion;
+                currentGender = btn.dataset.gender;
             });
         });
 
-        // Emotion settings
-        const emotionSettings = {
-            neutral: { rate: 1, pitch: 1, volume: 1 },
-            happy: { rate: 1.1, pitch: 1.1, volume: 1 },
-            sad: { rate: 0.9, pitch: 0.9, volume: 0.8 },
-            angry: { rate: 1.1, pitch: 1.2, volume: 1 },
-            excited: { rate: 1.3, pitch: 1.2, volume: 1 },
-            calm: { rate: 0.9, pitch: 1, volume: 0.9 },
-            scared: { rate: 1.2, pitch: 1.3, volume: 0.9 },
-            whisper: { rate: 0.8, pitch: 0.8, volume: 0.5 }
-        };
+        // Age selection
+        let currentAge = 30;
+        document.querySelectorAll('.age-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentAge = parseInt(btn.dataset.age);
+            });
+        });
 
-        // Language detection
-        const langPatterns = {
-            'ko-KR': /[가-힣]/,
-            'ja-JP': /[ひらがなカタカナ]/,
-            'zh-CN': /[中文]/,
-            'ar-SA': /[العربية]/,
-            'ru-RU': /[А-Яа-я]/,
-            'th-TH': /[ก-๙]/,
-            'vi-VN': /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ]/,
-            'es-ES': /[áéíóúñü¿¡]/,
-            'fr-FR': /[àâçéèêëîïôùûüÿ]/,
-            'de-DE': /[äöüß]/,
-            'pt-BR': /[ãõç]/,
-            'it-IT': /[àèéìíòóù]/,
-            'en-US': /[a-zA-Z]/
-        };
-
-        function detectLanguage(text) {
-            for (const [lang, pattern] of Object.entries(langPatterns)) {
-                if (pattern.test(text)) return lang;
-            }
-            return 'en-US';
+        // Voice settings based on gender and age
+        function getVoiceSettings() {
+            const baseSettings = {
+                male: { pitch: 0.9, rate: 1 },
+                female: { pitch: 1.2, rate: 1 }
+            };
+            
+            const ageAdjustments = {
+                10: { pitch: 1.3, rate: 1.2 },
+                20: { pitch: 1.1, rate: 1.1 },
+                30: { pitch: 1.0, rate: 1.0 },
+                40: { pitch: 0.9, rate: 0.95 },
+                50: { pitch: 0.85, rate: 0.9 },
+                60: { pitch: 0.8, rate: 0.85 }
+            };
+            
+            const base = baseSettings[currentGender];
+            const ageAdj = ageAdjustments[currentAge];
+            
+            return {
+                pitch: base.pitch * ageAdj.pitch,
+                rate: base.rate * ageAdj.rate
+            };
         }
 
         // TTS
         const synth = window.speechSynthesis;
-        let audioChunks = [];
         let mediaRecorder = null;
+        let audioChunks = [];
         let audioBlob = null;
-
-        document.getElementById('tts-text').addEventListener('input', (e) => {
-            const text = e.target.value;
-            const autoLang = document.getElementById('tts-lang').value;
-            if (autoLang === 'auto' && text.length > 0) {
-                const detected = detectLanguage(text);
-                document.getElementById('detected-lang').textContent = `Detected: ${detected}`;
-            }
-        });
 
         document.getElementById('tts-speed').addEventListener('input', (e) => {
             document.getElementById('speed-val').textContent = e.target.value;
-        });
-
-        document.getElementById('tts-pitch').addEventListener('input', (e) => {
-            document.getElementById('pitch-val').textContent = e.target.value;
         });
 
         async function setupAudioRecording() {
@@ -314,25 +309,28 @@
             }
             
             const utterance = new SpeechSynthesisUtterance(text);
-            let lang = document.getElementById('tts-lang').value;
-            
-            if (lang === 'auto') {
-                lang = detectLanguage(text);
-            }
+            const lang = document.getElementById('tts-lang').value;
+            const voiceSettings = getVoiceSettings();
+            const userSpeed = parseFloat(document.getElementById('tts-speed').value);
             
             utterance.lang = lang;
+            utterance.pitch = voiceSettings.pitch;
+            utterance.rate = voiceSettings.rate * userSpeed;
             
-            // Apply emotion settings + user preferences
-            const emotion = emotionSettings[currentEmotion];
-            const userRate = parseFloat(document.getElementById('tts-speed').value);
-            const userPitch = parseFloat(document.getElementById('tts-pitch').value);
-            
-            utterance.rate = emotion.rate * userRate;
-            utterance.pitch = emotion.pitch * userPitch;
-            utterance.volume = emotion.volume;
+            // Try to find a voice matching gender
+            const voices = synth.getVoices();
+            const genderVoice = voices.find(v => {
+                const voiceLang = v.lang.split('-')[0];
+                const targetLang = lang.split('-')[0];
+                return voiceLang === targetLang && 
+                       ((currentGender === 'male' && v.name.toLowerCase().includes('male')) ||
+                        (currentGender === 'female' && v.name.toLowerCase().includes('female')) ||
+                        v.name.toLowerCase().includes(currentGender));
+            });
+            if (genderVoice) utterance.voice = genderVoice;
             
             utterance.onstart = () => {
-                document.getElementById('tts-status').textContent = `🔊 Speaking with ${currentEmotion} emotion...`;
+                document.getElementById('tts-status').textContent = `🔊 Speaking in ${lang}...`;
             };
             
             utterance.onend = () => {
@@ -340,7 +338,6 @@
                     mediaRecorder.stop();
                 }
                 document.getElementById('tts-status').textContent = '✅ Done! Audio ready to download';
-                setTimeout(() => document.getElementById('tts-status').textContent = 'Ready', 3000);
             };
             
             synth.speak(utterance);
@@ -376,7 +373,7 @@
             if (audioBlob) downloadBlob(audioBlob, 'speech.ogg', 'audio/ogg');
         });
 
-        // STT - File upload
+        // STT with translation
         document.getElementById('audio-file').addEventListener('change', async (e) => {
             const files = e.target.files;
             if (!files.length) return;
@@ -387,13 +384,24 @@
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.continuous = true;
             recognition.interimResults = true;
+            recognition.lang = document.getElementById('stt-input-lang').value;
             
-            recognition.onresult = (event) => {
+            recognition.onresult = async (event) => {
                 let result = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     result += event.results[i][0].transcript;
                 }
-                document.getElementById('stt-result').value = result;
+                
+                // Simple translation using Web Speech API
+                const outputLang = document.getElementById('stt-output-lang').value;
+                if (outputLang !== document.getElementById('stt-input-lang').value) {
+                    document.getElementById('stt-status').textContent = '🔄 Translating...';
+                    // Note: Browser-based translation is limited
+                    // For full translation, would need an API
+                    document.getElementById('stt-result').value = result + ' (Note: Full translation requires API)';
+                } else {
+                    document.getElementById('stt-result').value = result;
+                }
             };
             
             recognition.onend = () => {
@@ -436,14 +444,16 @@
         }
 
         document.getElementById('stt-start').addEventListener('click', () => {
-            if (recognition) recognition.start();
+            if (recognition) {
+                recognition.lang = document.getElementById('stt-input-lang').value;
+                recognition.start();
+            }
         });
 
         document.getElementById('stt-stop').addEventListener('click', () => {
             if (recognition) recognition.stop();
         });
 
-        // Export functions
         function getText() {
             return document.getElementById('stt-result').value;
         }
