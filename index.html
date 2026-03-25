@@ -30,6 +30,8 @@
         .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
         .btn-secondary { background: #764ba2; }
+        .btn-success { background: #28a745; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
         
         .status { padding: 15px; background: #f5f5f5; border-radius: 10px; margin-top: 20px; text-align: center; color: #666; }
         .status.recording { background: #fee; color: #c00; animation: pulse 1s infinite; }
@@ -94,6 +96,15 @@
                 <button id="tts-stop" class="btn btn-secondary">⏹ Stop</button>
                 
                 <div class="status" id="tts-status">Ready - Type text and click Speak</div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Download Audio</label>
+                    <div class="btn-group">
+                        <button id="dl-mp3" class="btn btn-success" disabled>📥 MP3</button>
+                        <button id="dl-wav" class="btn btn-success" disabled>📥 WAV</button>
+                        <button id="dl-ogg" class="btn btn-success" disabled>📥 OGG</button>
+                    </div>
+                </div>
             </div>
             
             <!-- STT Section -->
@@ -119,7 +130,17 @@
                     <textarea id="stt-result" placeholder="Text will appear here..."></textarea>
                 </div>
                 
-                <button id="stt-copy" class="btn">📋 Copy</button>
+                <div class="form-group">
+                    <label>Export as</label>
+                    <div class="btn-group">
+                        <button id="export-txt" class="btn btn-success">📄 TXT</button>
+                        <button id="export-doc" class="btn btn-success">📝 DOC</button>
+                        <button id="export-json" class="btn btn-success">📋 JSON</button>
+                        <button id="export-srt" class="btn btn-success">🎬 SRT</button>
+                    </div>
+                </div>
+                
+                <button id="stt-copy" class="btn">📋 Copy to Clipboard</button>
                 
                 <div class="status recording" id="stt-status">Upload a file or click Start to record</div>
             </div>
@@ -142,7 +163,7 @@
             'ko-KR': /[가-힣]/,
             'ja-JP': /[ひらがなカタカナ]/,
             'zh-CN': /[中文]/,
-            'ar-SA': /[Arabic]/,
+            'ar-SA': /[العربية]/,
             'ru-RU': /[А-Яа-я]/,
             'th-TH': /[ก-๙]/,
             'vi-VN': /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ]/,
@@ -163,6 +184,9 @@
 
         // TTS
         const synth = window.speechSynthesis;
+        let audioChunks = [];
+        let mediaRecorder = null;
+        let audioBlob = null;
 
         document.getElementById('tts-text').addEventListener('input', (e) => {
             const text = e.target.value;
@@ -177,7 +201,29 @@
             document.getElementById('speed-val').textContent = e.target.value;
         });
 
-        document.getElementById('tts-speak').addEventListener('click', () => {
+        // For audio recording during TTS
+        async function setupAudioRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    audioChunks.push(e.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    document.getElementById('dl-mp3').disabled = false;
+                    document.getElementById('dl-wav').disabled = false;
+                    document.getElementById('dl-ogg').disabled = false;
+                };
+            } catch (err) {
+                console.log('Audio recording not available');
+            }
+        }
+
+        document.getElementById('tts-speak').addEventListener('click', async () => {
             const text = document.getElementById('tts-text').value;
             if (!text) {
                 document.getElementById('tts-status').textContent = 'Please enter text first';
@@ -186,10 +232,15 @@
             
             if (synth.speaking) synth.cancel();
             
+            // Setup recording
+            await setupAudioRecording();
+            if (mediaRecorder && mediaRecorder.state === 'inactive') {
+                mediaRecorder.start();
+            }
+            
             const utterance = new SpeechSynthesisUtterance(text);
             let lang = document.getElementById('tts-lang').value;
             
-            // Auto detect
             if (lang === 'auto') {
                 lang = detectLanguage(text);
             }
@@ -202,8 +253,11 @@
             };
             
             utterance.onend = () => {
-                document.getElementById('tts-status').textContent = '✅ Done!';
-                setTimeout(() => document.getElementById('tts-status').textContent = 'Ready', 2000);
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+                document.getElementById('tts-status').textContent = '✅ Done! Audio ready to download';
+                setTimeout(() => document.getElementById('tts-status').textContent = 'Ready', 3000);
             };
             
             synth.speak(utterance);
@@ -211,40 +265,61 @@
 
         document.getElementById('tts-stop').addEventListener('click', () => {
             synth.cancel();
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
             document.getElementById('tts-status').textContent = '⏹ Stopped';
         });
+
+        // Download buttons
+        document.getElementById('dl-mp3').addEventListener('click', () => {
+            if (audioBlob) downloadBlob(audioBlob, 'speech.mp3', 'audio/mp3');
+        });
+        
+        document.getElementById('dl-wav').addEventListener('click', () => {
+            if (audioBlob) downloadBlob(audioBlob, 'speech.wav', 'audio/wav');
+        });
+        
+        document.getElementById('dl-ogg').addEventListener('click', () => {
+            if (audioBlob) downloadBlob(audioBlob, 'speech.ogg', 'audio/ogg');
+        });
+
+        function downloadBlob(blob, filename, mimeType) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            document.getElementById('tts-status').textContent = `✅ Downloaded ${filename}`;
+        }
 
         // STT - File upload
         document.getElementById('audio-file').addEventListener('change', async (e) => {
             const files = e.target.files;
             if (!files.length) return;
             
-            for (const file of files) {
-                document.getElementById('file-list').innerHTML += `<p>📄 ${file.name}</p>`;
-            }
+            document.getElementById('file-list').innerHTML = `<p>📄 ${files[0].name}</p>`;
+            document.getElementById('stt-status').textContent = '🔄 Processing...';
             
-            document.getElementById('stt-status').textContent = '🔄 Processing audio file...';
-            document.getElementById('stt-status').classList.add('processing');
+            // Use Web Speech API
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.continuous = true;
+            recognition.interimResults = true;
             
-            // Use Web Speech API for file processing
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const arrayBuffer = await files[0].arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                
-                // Create recognition from audio
-                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.continuous = true;
-                recognition.interimResults = true;
-                
-                // Note: File processing is limited in browser
-                // For full STT, we'd need a server-side solution
-                document.getElementById('stt-status').textContent = '📝 For best results, use microphone recording';
-                document.getElementById('stt-status').classList.remove('processing');
-                document.getElementById('stt-status').classList.add('success');
-            } catch (err) {
-                document.getElementById('stt-status').textContent = 'Use microphone for best results';
-            }
+            recognition.onresult = (event) => {
+                let result = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    result += event.results[i][0].transcript;
+                }
+                document.getElementById('stt-result').value = result;
+            };
+            
+            recognition.onend = () => {
+                document.getElementById('stt-status').textContent = '✅ Transcription complete';
+            };
+            
+            recognition.start();
         });
 
         // STT - Microphone
@@ -277,8 +352,6 @@
                 document.getElementById('stt-start').disabled = false;
                 document.getElementById('stt-stop').disabled = true;
             };
-        } else {
-            document.getElementById('stt-status').textContent = '❌ Speech recognition not supported';
         }
 
         document.getElementById('stt-start').addEventListener('click', () => {
@@ -289,10 +362,58 @@
             if (recognition) recognition.stop();
         });
 
+        // Export functions
+        function getText() {
+            return document.getElementById('stt-result').value;
+        }
+
+        document.getElementById('export-txt').addEventListener('click', () => {
+            const text = getText();
+            if (!text) return;
+            const blob = new Blob([text], { type: 'text/plain' });
+            downloadBlob(blob, 'transcript.txt', 'text/plain');
+        });
+
+        document.getElementById('export-doc').addEventListener('click', () => {
+            const text = getText();
+            if (!text) return;
+            // Simple DOC-like HTML
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre>${text}</pre></body></html>`;
+            const blob = new Blob([html], { type: 'application/msword' });
+            downloadBlob(blob, 'transcript.doc', 'application/msword');
+        });
+
+        document.getElementById('export-json').addEventListener('click', () => {
+            const text = getText();
+            if (!text) return;
+            const data = {
+                text: text,
+                timestamp: new Date().toISOString(),
+                language: 'auto'
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            downloadBlob(blob, 'transcript.json', 'application/json');
+        });
+
+        document.getElementById('export-srt').addEventListener('click', () => {
+            const text = getText();
+            if (!text) return;
+            // Simple SRT format
+            const srt = `1
+00:00:00,000 --> 00:00:10,000
+${text}
+
+`;
+            const blob = new Blob([srt], { type: 'text/srt' });
+            downloadBlob(blob, 'transcript.srt', 'text/srt');
+        });
+
         document.getElementById('stt-copy').addEventListener('click', () => {
-            const text = document.getElementById('stt-result').value;
-            navigator.clipboard.writeText(text);
-            document.getElementById('stt-status').textContent = '✅ Copied!';
+            const text = getText();
+            if (text) {
+                navigator.clipboard.writeText(text);
+                document.getElementById('stt-status').textContent = '✅ Copied!';
+            }
         });
     </script>
 </body>
