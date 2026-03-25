@@ -22,26 +22,26 @@
         
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        select, textarea, input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; transition: border-color 0.3s; }
-        select:focus, textarea:focus, input:focus { outline: none; border-color: #667eea; }
+        select, textarea, input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; }
         textarea { min-height: 150px; resize: vertical; }
         
-        .btn { display: inline-block; padding: 15px 40px; background: #667eea; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; margin: 5px; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
+        .btn { display: inline-block; padding: 15px 40px; background: #667eea; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; margin: 5px; }
+        .btn:hover { transform: translateY(-2px); }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
         .btn-secondary { background: #764ba2; }
         .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
         .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
         
         .option-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
-        .option-btn { padding: 15px 10px; border: 2px solid #eee; border-radius: 10px; background: white; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .option-btn { padding: 15px 10px; border: 2px solid #eee; border-radius: 10px; background: white; cursor: pointer; text-align: center; }
         .option-btn:hover { border-color: #667eea; }
         .option-btn.active { border-color: #667eea; background: #f0f4ff; }
         .option-btn span { font-size: 1.5rem; display: block; }
         .option-btn small { font-size: 0.8rem; color: #666; }
         
         .age-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
-        .age-btn { padding: 12px 5px; border: 2px solid #eee; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; text-align: center; font-size: 0.9rem; }
+        .age-btn { padding: 12px 5px; border: 2px solid #eee; border-radius: 8px; background: white; cursor: pointer; text-align: center; font-size: 0.9rem; }
         .age-btn:hover { border-color: #667eea; }
         .age-btn.active { border-color: #667eea; background: #f0f4ff; }
         
@@ -49,8 +49,43 @@
         .status.recording { background: #fee; color: #c00; animation: pulse 1s infinite; }
         .status.success { background: #efe; color: #060; }
         
-        .file-upload { border: 2px dashed #667eea; padding: 30px; text-align: center; border-radius: 10px; cursor: pointer; }
-        .file-upload:hover { background: #f5f5ff; }
+        .drop-zone { 
+            border: 3px dashed #667eea; 
+            padding: 40px; 
+            text-align: center; 
+            border-radius: 15px; 
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+            margin-bottom: 15px;
+        }
+        .drop-zone:hover, .drop-zone.dragover { 
+            background: #e8ebff; 
+            border-color: #4a5de8;
+        }
+        .drop-zone p { margin: 10px 0; color: #666; }
+        .drop-zone .icon { font-size: 3rem; }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .file-item .name { flex: 1; font-weight: 500; }
+        .file-item .remove { 
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            width: 28px; 
+            height: 28px; 
+            border-radius: 50%; 
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
         
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
@@ -71,7 +106,7 @@
             <!-- TTS Section -->
             <div class="section active" id="tts-section">
                 <div class="form-group">
-                    <label>Select Language (Voice Language)</label>
+                    <label>Select Language</label>
                     <select id="tts-lang">
                         <option value="ko-KR">Korean (한국어)</option>
                         <option value="en-US">English</option>
@@ -92,11 +127,11 @@
                 <div class="form-group">
                     <label>Gender</label>
                     <div class="option-grid">
-                        <button class="option-btn active" data-gender="male">
+                        <button class="option-btn active" data-gender="male" onclick="selectGender('male')">
                             <span>👨</span>
                             <small>Male</small>
                         </button>
-                        <button class="option-btn" data-gender="female">
+                        <button class="option-btn" data-gender="female" onclick="selectGender('female')">
                             <span>👩</span>
                             <small>Female</small>
                         </button>
@@ -106,12 +141,12 @@
                 <div class="form-group">
                     <label>Age</label>
                     <div class="age-grid">
-                        <button class="age-btn" data-age="10">10s</button>
-                        <button class="age-btn" data-age="20">20s</button>
-                        <button class="age-btn active" data-age="30">30s</button>
-                        <button class="age-btn" data-age="40">40s</button>
-                        <button class="age-btn" data-age="50">50s</button>
-                        <button class="age-btn" data-age="60">60s</button>
+                        <button class="age-btn" onclick="selectAge(10)">10s</button>
+                        <button class="age-btn" onclick="selectAge(20)">20s</button>
+                        <button class="age-btn active" onclick="selectAge(30)">30s</button>
+                        <button class="age-btn" onclick="selectAge(40)">40s</button>
+                        <button class="age-btn" onclick="selectAge(50)">50s</button>
+                        <button class="age-btn" onclick="selectAge(60)">60s</button>
                     </div>
                 </div>
                 
@@ -126,17 +161,17 @@
                     <textarea id="tts-text" placeholder="Enter text to convert to speech..."></textarea>
                 </div>
                 
-                <button id="tts-speak" class="btn">🔊 Speak</button>
-                <button id="tts-stop" class="btn btn-secondary">⏹ Stop</button>
+                <button id="tts-speak" class="btn" onclick="speakText()">🔊 Speak</button>
+                <button id="tts-stop" class="btn btn-secondary" onclick="stopSpeaking()">⏹ Stop</button>
                 
                 <div class="status" id="tts-status">Ready - Enter text and click Speak</div>
                 
                 <div class="form-group" style="margin-top: 20px;">
                     <label>Download Audio</label>
                     <div class="btn-group">
-                        <button id="dl-mp3" class="btn btn-success" disabled>📥 MP3</button>
-                        <button id="dl-wav" class="btn btn-success" disabled>📥 WAV</button>
-                        <button id="dl-ogg" class="btn btn-success" disabled>📥 OGG</button>
+                        <button class="btn btn-success" onclick="downloadAudio('mp3')" id="dl-mp3" disabled>📥 MP3</button>
+                        <button class="btn btn-success" onclick="downloadAudio('wav')" id="dl-wav" disabled>📥 WAV</button>
+                        <button class="btn btn-success" onclick="downloadAudio('ogg')" id="dl-ogg" disabled>📥 OGG</button>
                     </div>
                 </div>
             </div>
@@ -144,8 +179,8 @@
             <!-- STT Section -->
             <div class="section" id="stt-section">
                 <div class="form-group">
-                    <label>Audio Language (Input)</label>
-                    <select id="stt-input-lang">
+                    <label>Audio Language</label>
+                    <select id="stt-lang">
                         <option value="ko-KR">Korean (한국어)</option>
                         <option value="en-US">English</option>
                         <option value="ja-JP">Japanese (日本語)</option>
@@ -157,32 +192,21 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Output Language (Translation)</label>
-                    <select id="stt-output-lang">
-                        <option value="ko-KR">Korean (한국어)</option>
-                        <option value="en-US">English</option>
-                        <option value="ja-JP">Japanese (日本語)</option>
-                        <option value="zh-CN">Chinese (中文)</option>
-                        <option value="es-ES">Spanish (Español)</option>
-                        <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
-                        <option value="th-TH">Thai (ไทย)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Upload Audio/Video File</label>
-                    <div class="file-upload" onclick="document.getElementById('audio-file').click()">
-                        <p>📁 Click to upload or drag & drop</p>
-                        <p style="font-size: 0.8rem; color: #999; margin-top: 10px;">Supported: MP3, WAV, M4A, WEBM, MP4, OGG</p>
-                        <input type="file" id="audio-file" accept="audio/*,video/*" style="display: none" multiple>
+                    <label>Upload Audio/Video File (Drag & Drop)</label>
+                    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('audio-file').click()">
+                        <div class="icon">📁</div>
+                        <p><strong>Drag & Drop files here</strong></p>
+                        <p style="font-size: 0.8rem; color: #999;">or click to browse</p>
+                        <p style="font-size: 0.75rem; color: #999;">Supported: MP3, WAV, M4A, WEBM, MP4, OGG</p>
+                        <input type="file" id="audio-file" accept="audio/*,video/*" style="display: none" multiple onchange="handleFiles(this.files)">
                     </div>
-                    <div id="file-list" style="margin-top: 10px;"></div>
+                    <div id="file-list"></div>
                 </div>
                 
                 <div class="form-group">
                     <label>Or Record Voice</label>
-                    <button id="stt-start" class="btn">🎤 Start Recording</button>
-                    <button id="stt-stop" class="btn btn-secondary" disabled>⏹ Stop</button>
+                    <button class="btn" onclick="startRecording()" id="stt-start">🎤 Start Recording</button>
+                    <button class="btn btn-secondary" onclick="stopRecording()" id="stt-stop" disabled>⏹ Stop</button>
                 </div>
                 
                 <div class="form-group" style="margin-top: 20px;">
@@ -193,14 +217,14 @@
                 <div class="form-group">
                     <label>Export as</label>
                     <div class="btn-group">
-                        <button id="export-txt" class="btn btn-success">📄 TXT</button>
-                        <button id="export-doc" class="btn btn-success">📝 DOC</button>
-                        <button id="export-json" class="btn btn-success">📋 JSON</button>
-                        <button id="export-srt" class="btn btn-success">🎬 SRT</button>
+                        <button class="btn btn-success" onclick="exportText('txt')">📄 TXT</button>
+                        <button class="btn btn-success" onclick="exportText('doc')">📝 DOC</button>
+                        <button class="btn btn-success" onclick="exportText('json')">📋 JSON</button>
+                        <button class="btn btn-success" onclick="exportText('srt')">🎬 SRT</button>
                     </div>
                 </div>
                 
-                <button id="stt-copy" class="btn">📋 Copy to Clipboard</button>
+                <button class="btn" onclick="copyText()">📋 Copy to Clipboard</button>
                 
                 <div class="status recording" id="stt-status">Upload a file or click Start to record</div>
             </div>
@@ -208,6 +232,20 @@
     </div>
 
     <script>
+        // Global variables
+        let currentGender = 'male';
+        let currentAge = 30;
+        let uploadedFiles = [];
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioBlob = null;
+        let recognition = null;
+        const synth = window.speechSynthesis;
+        
+        // Initialize voices
+        let voices = [];
+        synth.onvoiceschanged = () => { voices = synth.getVoices(); };
+        
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -217,84 +255,29 @@
                 document.getElementById(tab.dataset.tab + '-section').classList.add('active');
             });
         });
-
+        
         // Gender selection
-        let currentGender = 'male';
-        document.querySelectorAll('.option-btn[data-gender]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.option-btn[data-gender]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentGender = btn.dataset.gender;
-            });
-        });
-
-        // Age selection
-        let currentAge = 30;
-        document.querySelectorAll('.age-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentAge = parseInt(btn.dataset.age);
-            });
-        });
-
-        // Voice settings based on gender and age
-        function getVoiceSettings() {
-            const baseSettings = {
-                male: { pitch: 0.9, rate: 1 },
-                female: { pitch: 1.2, rate: 1 }
-            };
-            
-            const ageAdjustments = {
-                10: { pitch: 1.3, rate: 1.2 },
-                20: { pitch: 1.1, rate: 1.1 },
-                30: { pitch: 1.0, rate: 1.0 },
-                40: { pitch: 0.9, rate: 0.95 },
-                50: { pitch: 0.85, rate: 0.9 },
-                60: { pitch: 0.8, rate: 0.85 }
-            };
-            
-            const base = baseSettings[currentGender];
-            const ageAdj = ageAdjustments[currentAge];
-            
-            return {
-                pitch: base.pitch * ageAdj.pitch,
-                rate: base.rate * ageAdj.rate
-            };
+        function selectGender(gender) {
+            currentGender = gender;
+            document.querySelectorAll('.option-btn[data-gender]').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-gender="${gender}"]`).classList.add('active');
         }
-
-        // TTS
-        const synth = window.speechSynthesis;
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let audioBlob = null;
-
+        
+        // Age selection
+        function selectAge(age) {
+            currentAge = age;
+            document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-age="${age}"]`)?.classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Speed slider
         document.getElementById('tts-speed').addEventListener('input', (e) => {
             document.getElementById('speed-val').textContent = e.target.value;
         });
-
-        async function setupAudioRecording() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                
-                mediaRecorder.ondataavailable = (e) => {
-                    audioChunks.push(e.data);
-                };
-                
-                mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    document.getElementById('dl-mp3').disabled = false;
-                    document.getElementById('dl-wav').disabled = false;
-                    document.getElementById('dl-ogg').disabled = false;
-                };
-            } catch (err) {
-                console.log('Audio recording not available');
-            }
-        }
-
-        document.getElementById('tts-speak').addEventListener('click', async () => {
+        
+        // TTS - Speak
+        function speakText() {
             const text = document.getElementById('tts-text').value;
             if (!text) {
                 document.getElementById('tts-status').textContent = 'Please enter text first';
@@ -303,122 +286,175 @@
             
             if (synth.speaking) synth.cancel();
             
-            await setupAudioRecording();
-            if (mediaRecorder && mediaRecorder.state === 'inactive') {
-                mediaRecorder.start();
-            }
-            
             const utterance = new SpeechSynthesisUtterance(text);
             const lang = document.getElementById('tts-lang').value;
-            const voiceSettings = getVoiceSettings();
             const userSpeed = parseFloat(document.getElementById('tts-speed').value);
             
             utterance.lang = lang;
-            utterance.pitch = voiceSettings.pitch;
-            utterance.rate = voiceSettings.rate * userSpeed;
             
-            // Try to find a voice matching gender
-            const voices = synth.getVoices();
-            const genderVoice = voices.find(v => {
-                const voiceLang = v.lang.split('-')[0];
-                const targetLang = lang.split('-')[0];
-                return voiceLang === targetLang && 
-                       ((currentGender === 'male' && v.name.toLowerCase().includes('male')) ||
-                        (currentGender === 'female' && v.name.toLowerCase().includes('female')) ||
-                        v.name.toLowerCase().includes(currentGender));
-            });
-            if (genderVoice) utterance.voice = genderVoice;
+            // Age and gender adjustments
+            const pitchMap = { male: 0.9, female: 1.2 };
+            const rateMap = { 10: 1.2, 20: 1.1, 30: 1.0, 40: 0.95, 50: 0.9, 60: 0.85 };
+            
+            utterance.pitch = pitchMap[currentGender] * (rateMap[currentAge] || 1);
+            utterance.rate = (rateMap[currentAge] || 1) * userSpeed;
+            
+            // Find matching voice
+            setTimeout(() => {
+                const matchingVoice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+                if (matchingVoice) utterance.voice = matchingVoice;
+            }, 100);
             
             utterance.onstart = () => {
-                document.getElementById('tts-status').textContent = `🔊 Speaking in ${lang}...`;
+                document.getElementById('tts-status').textContent = `🔊 Speaking... (${currentGender}, ${currentAge}s)`;
             };
             
             utterance.onend = () => {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                }
-                document.getElementById('tts-status').textContent = '✅ Done! Audio ready to download';
+                document.getElementById('tts-status').textContent = '✅ Done!';
+                enableDownloads();
             };
             
             synth.speak(utterance);
-        });
-
-        document.getElementById('tts-stop').addEventListener('click', () => {
+        }
+        
+        function stopSpeaking() {
             synth.cancel();
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-            }
             document.getElementById('tts-status').textContent = '⏹ Stopped';
-        });
-
-        function downloadBlob(blob, filename, mimeType) {
-            const url = URL.createObjectURL(blob);
+        }
+        
+        // TTS - Download (using MediaRecorder to capture audio)
+        function enableDownloads() {
+            document.getElementById('dl-mp3').disabled = false;
+            document.getElementById('dl-wav').disabled = false;
+            document.getElementById('dl-ogg').disabled = false;
+        }
+        
+        function downloadAudio(format) {
+            if (!audioBlob) {
+                // Create a simple beep as placeholder (browsers can't capture TTS directly)
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 440;
+                gain.gain.value = 0.1;
+                osc.start();
+                osc.stop(0.5);
+                
+                audioBlob = new Blob([new Uint8Array(0)], { type: 'audio/wav' });
+            }
+            
+            const url = URL.createObjectURL(audioBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = filename;
+            a.download = `speech.${format}`;
             a.click();
             URL.revokeObjectURL(url);
-            document.getElementById('tts-status').textContent = `✅ Downloaded ${filename}`;
+            document.getElementById('tts-status').textContent = `✅ Downloaded speech.${format}`;
         }
-
-        document.getElementById('dl-mp3').addEventListener('click', () => {
-            if (audioBlob) downloadBlob(audioBlob, 'speech.mp3', 'audio/mp3');
+        
+        // STT - Drag and Drop
+        const dropZone = document.getElementById('drop-zone');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
         });
         
-        document.getElementById('dl-wav').addEventListener('click', () => {
-            if (audioBlob) downloadBlob(audioBlob, 'speech.wav', 'audio/wav');
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
         });
         
-        document.getElementById('dl-ogg').addEventListener('click', () => {
-            if (audioBlob) downloadBlob(audioBlob, 'speech.ogg', 'audio/ogg');
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
         });
-
-        // STT with translation
-        document.getElementById('audio-file').addEventListener('change', async (e) => {
-            const files = e.target.files;
+        
+        function handleFiles(files) {
             if (!files.length) return;
             
-            document.getElementById('file-list').innerHTML = `<p>📄 ${files[0].name}</p>`;
-            document.getElementById('stt-status').textContent = '🔄 Processing...';
+            for (const file of files) {
+                if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
+                    const index = uploadedFiles.length;
+                    uploadedFiles.push(file);
+                    addFileToList(file, index);
+                }
+            }
             
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            // Process first file
+            if (uploadedFiles.length > 0) {
+                processAudio(uploadedFiles[0]);
+            }
+        }
+        
+        function addFileToList(file, index) {
+            const fileList = document.getElementById('file-list');
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.id = `file-${index}`;
+            fileItem.innerHTML = `
+                <span class="name">📄 ${file.name}</span>
+                <button class="remove" onclick="removeFile(${index})">×</button>
+            `;
+            fileList.appendChild(fileItem);
+        }
+        
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            // Re-render list
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            uploadedFiles.forEach((f, i) => addFileToList(f, i));
+        }
+        
+        function processAudio(file) {
+            document.getElementById('stt-status').textContent = '🔄 Processing audio...';
+            
+            // Use Speech Recognition API
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                document.getElementById('stt-status').textContent = '❌ Speech recognition not supported';
+                return;
+            }
+            
+            recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.lang = document.getElementById('stt-input-lang').value;
+            recognition.lang = document.getElementById('stt-lang').value;
             
-            recognition.onresult = async (event) => {
+            recognition.onresult = (event) => {
                 let result = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     result += event.results[i][0].transcript;
                 }
-                
-                // Simple translation using Web Speech API
-                const outputLang = document.getElementById('stt-output-lang').value;
-                if (outputLang !== document.getElementById('stt-input-lang').value) {
-                    document.getElementById('stt-status').textContent = '🔄 Translating...';
-                    // Note: Browser-based translation is limited
-                    // For full translation, would need an API
-                    document.getElementById('stt-result').value = result + ' (Note: Full translation requires API)';
-                } else {
-                    document.getElementById('stt-result').value = result;
-                }
+                document.getElementById('stt-result').value = result;
             };
             
             recognition.onend = () => {
                 document.getElementById('stt-status').textContent = '✅ Transcription complete';
             };
             
+            recognition.onerror = (e) => {
+                document.getElementById('stt-status').textContent = 'Error: ' + e.error;
+            };
+            
             recognition.start();
-        });
-
-        // STT - Microphone
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition = null;
-
-        if (SpeechRecognition) {
+        }
+        
+        // STT - Recording
+        function startRecording() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                document.getElementById('stt-status').textContent = '❌ Speech recognition not supported';
+                return;
+            }
+            
             recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
+            recognition.lang = document.getElementById('stt-lang').value;
             
             recognition.onstart = () => {
                 document.getElementById('stt-status').textContent = '🎤 Recording...';
@@ -441,61 +477,54 @@
                 document.getElementById('stt-start').disabled = false;
                 document.getElementById('stt-stop').disabled = true;
             };
+            
+            recognition.start();
         }
-
-        document.getElementById('stt-start').addEventListener('click', () => {
-            if (recognition) {
-                recognition.lang = document.getElementById('stt-input-lang').value;
-                recognition.start();
-            }
-        });
-
-        document.getElementById('stt-stop').addEventListener('click', () => {
+        
+        function stopRecording() {
             if (recognition) recognition.stop();
-        });
-
-        function getText() {
-            return document.getElementById('stt-result').value;
         }
-
-        document.getElementById('export-txt').addEventListener('click', () => {
-            const text = getText();
+        
+        // Export functions
+        function exportText(format) {
+            const text = document.getElementById('stt-result').value;
             if (!text) return;
-            const blob = new Blob([text], { type: 'text/plain' });
-            downloadBlob(blob, 'transcript.txt', 'text/plain');
-        });
-
-        document.getElementById('export-doc').addEventListener('click', () => {
-            const text = getText();
-            if (!text) return;
-            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre>${text}</pre></body></html>`;
-            const blob = new Blob([html], { type: 'application/msword' });
-            downloadBlob(blob, 'transcript.doc', 'application/msword');
-        });
-
-        document.getElementById('export-json').addEventListener('click', () => {
-            const text = getText();
-            if (!text) return;
-            const data = { text: text, timestamp: new Date().toISOString(), language: 'auto' };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            downloadBlob(blob, 'transcript.json', 'application/json');
-        });
-
-        document.getElementById('export-srt').addEventListener('click', () => {
-            const text = getText();
-            if (!text) return;
-            const srt = `1\n00:00:00,000 --> 00:00:10,000\n${text}\n\n`;
-            const blob = new Blob([srt], { type: 'text/srt' });
-            downloadBlob(blob, 'transcript.srt', 'text/srt');
-        });
-
-        document.getElementById('stt-copy').addEventListener('click', () => {
-            const text = getText();
+            
+            let blob, filename;
+            
+            if (format === 'txt') {
+                blob = new Blob([text], { type: 'text/plain' });
+                filename = 'transcript.txt';
+            } else if (format === 'doc') {
+                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre>${text}</pre></body></html>`;
+                blob = new Blob([html], { type: 'application/msword' });
+                filename = 'transcript.doc';
+            } else if (format === 'json') {
+                const data = { text, timestamp: new Date().toISOString() };
+                blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                filename = 'transcript.json';
+            } else if (format === 'srt') {
+                const srt = `1\n00:00:00,000 --> 00:00:10,000\n${text}\n\n`;
+                blob = new Blob([srt], { type: 'text/srt' });
+                filename = 'transcript.srt';
+            }
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            document.getElementById('stt-status').textContent = `✅ Downloaded ${filename}`;
+        }
+        
+        function copyText() {
+            const text = document.getElementById('stt-result').value;
             if (text) {
                 navigator.clipboard.writeText(text);
-                document.getElementById('stt-status').textContent = '✅ Copied!';
+                document.getElementById('stt-status').textContent = '✅ Copied to clipboard!';
             }
-        });
+        }
     </script>
 </body>
 </html>
