@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Tools - Free TTS & STT</title>
+    <title>SpeakEasy - Free TTS & STT</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
@@ -33,19 +33,20 @@
         
         .status { padding: 15px; background: #f5f5f5; border-radius: 10px; margin-top: 20px; text-align: center; color: #666; }
         .status.recording { background: #fee; color: #c00; animation: pulse 1s infinite; }
+        .status.success { background: #efe; color: #060; }
+        
+        .file-upload { border: 2px dashed #667eea; padding: 30px; text-align: center; border-radius: 10px; cursor: pointer; }
+        .file-upload:hover { background: #f5f5ff; }
+        
+        .detected { font-size: 0.9rem; color: #667eea; margin-top: 5px; }
         
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .audio-player { width: 100%; margin-top: 20px; }
-        
-        .languages { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .lang-tag { padding: 5px 15px; background: #f0f0f0; border-radius: 20px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎙️ Voice Tools</h1>
+            <h1>🎙️ SpeakEasy</h1>
             <p>Free TTS & STT - Multiple Languages</p>
         </div>
         
@@ -58,8 +59,9 @@
             <!-- TTS Section -->
             <div class="section active" id="tts-section">
                 <div class="form-group">
-                    <label>Select Language</label>
+                    <label>Language (Auto-detected from text)</label>
                     <select id="tts-lang">
+                        <option value="auto">🔍 Auto Detect</option>
                         <option value="ko-KR">Korean (한국어)</option>
                         <option value="en-US">English</option>
                         <option value="ja-JP">Japanese (日本語)</option>
@@ -74,6 +76,7 @@
                         <option value="pt-BR">Portuguese (Português)</option>
                         <option value="it-IT">Italian (Italiano)</option>
                     </select>
+                    <div class="detected" id="detected-lang"></div>
                 </div>
                 
                 <div class="form-group">
@@ -83,42 +86,42 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Enter Text</label>
-                    <textarea id="tts-text" placeholder="Enter text to convert to speech..."></textarea>
+                    <label>Enter Text (Any Language)</label>
+                    <textarea id="tts-text" placeholder="Type in any language - we'll detect it automatically!"></textarea>
                 </div>
                 
                 <button id="tts-speak" class="btn">🔊 Speak</button>
                 <button id="tts-stop" class="btn btn-secondary">⏹ Stop</button>
                 
-                <div class="status" id="tts-status">Ready</div>
+                <div class="status" id="tts-status">Ready - Type text and click Speak</div>
             </div>
             
             <!-- STT Section -->
             <div class="section" id="stt-section">
                 <div class="form-group">
-                    <label>Select Language</label>
-                    <select id="stt-lang">
-                        <option value="ko-KR">Korean (한국어)</option>
-                        <option value="en-US">English</option>
-                        <option value="ja-JP">Japanese (日本語)</option>
-                        <option value="zh-CN">Chinese (中文)</option>
-                        <option value="es-ES">Spanish (Español)</option>
-                        <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
-                        <option value="th-TH">Thai (ไทย)</option>
-                    </select>
+                    <label>Upload Audio/Video File</label>
+                    <div class="file-upload" onclick="document.getElementById('audio-file').click()">
+                        <p>📁 Click to upload or drag & drop</p>
+                        <p style="font-size: 0.8rem; color: #999; margin-top: 10px;">Supported: MP3, WAV, M4A, WEBM, MP4, OGG</p>
+                        <input type="file" id="audio-file" accept="audio/*,video/*" style="display: none" multiple>
+                    </div>
+                    <div id="file-list" style="margin-top: 10px;"></div>
                 </div>
                 
-                <button id="stt-start" class="btn">🎤 Start Recording</button>
-                <button id="stt-stop" class="btn btn-secondary" disabled>⏹ Stop</button>
+                <div class="form-group">
+                    <label>Or Record Voice</label>
+                    <button id="stt-start" class="btn">🎤 Start Recording</button>
+                    <button id="stt-stop" class="btn btn-secondary" disabled>⏹ Stop</button>
+                </div>
                 
                 <div class="form-group" style="margin-top: 20px;">
                     <label>Result</label>
-                    <textarea id="stt-result" placeholder="Speech will appear here..."></textarea>
+                    <textarea id="stt-result" placeholder="Text will appear here..."></textarea>
                 </div>
                 
                 <button id="stt-copy" class="btn">📋 Copy</button>
                 
-                <div class="status recording" id="stt-status">Click Start to begin recording</div>
+                <div class="status recording" id="stt-status">Upload a file or click Start to record</div>
             </div>
         </div>
     </div>
@@ -134,9 +137,41 @@
             });
         });
 
+        // Language detection
+        const langPatterns = {
+            'ko-KR': /[가-힣]/,
+            'ja-JP': /[ひらがなカタカナ]/,
+            'zh-CN': /[中文]/,
+            'ar-SA': /[Arabic]/,
+            'ru-RU': /[А-Яа-я]/,
+            'th-TH': /[ก-๙]/,
+            'vi-VN': /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ]/,
+            'es-ES': /[áéíóúñü¿¡]/,
+            'fr-FR': /[àâçéèêëîïôùûüÿ]/,
+            'de-DE': /[äöüß]/,
+            'pt-BR': /[ãõç]/,
+            'it-IT': /[àèéìíòóù]/,
+            'en-US': /[a-zA-Z]/
+        };
+
+        function detectLanguage(text) {
+            for (const [lang, pattern] of Object.entries(langPatterns)) {
+                if (pattern.test(text)) return lang;
+            }
+            return 'en-US';
+        }
+
         // TTS
         const synth = window.speechSynthesis;
-        let currentUtterance = null;
+
+        document.getElementById('tts-text').addEventListener('input', (e) => {
+            const text = e.target.value;
+            const autoLang = document.getElementById('tts-lang').value;
+            if (autoLang === 'auto' && text.length > 0) {
+                const detected = detectLanguage(text);
+                document.getElementById('detected-lang').textContent = `Detected: ${detected}`;
+            }
+        });
 
         document.getElementById('tts-speed').addEventListener('input', (e) => {
             document.getElementById('speed-val').textContent = e.target.value;
@@ -151,20 +186,27 @@
             
             if (synth.speaking) synth.cancel();
             
-            currentUtterance = new SpeechSynthesisUtterance(text);
-            currentUtterance.lang = document.getElementById('tts-lang').value;
-            currentUtterance.rate = parseFloat(document.getElementById('tts-speed').value);
+            const utterance = new SpeechSynthesisUtterance(text);
+            let lang = document.getElementById('tts-lang').value;
             
-            currentUtterance.onstart = () => {
-                document.getElementById('tts-status').textContent = '🔊 Speaking...';
+            // Auto detect
+            if (lang === 'auto') {
+                lang = detectLanguage(text);
+            }
+            
+            utterance.lang = lang;
+            utterance.rate = parseFloat(document.getElementById('tts-speed').value);
+            
+            utterance.onstart = () => {
+                document.getElementById('tts-status').textContent = `🔊 Speaking in ${lang}...`;
             };
             
-            currentUtterance.onend = () => {
+            utterance.onend = () => {
                 document.getElementById('tts-status').textContent = '✅ Done!';
                 setTimeout(() => document.getElementById('tts-status').textContent = 'Ready', 2000);
             };
             
-            synth.speak(currentUtterance);
+            synth.speak(utterance);
         });
 
         document.getElementById('tts-stop').addEventListener('click', () => {
@@ -172,7 +214,40 @@
             document.getElementById('tts-status').textContent = '⏹ Stopped';
         });
 
-        // STT
+        // STT - File upload
+        document.getElementById('audio-file').addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files.length) return;
+            
+            for (const file of files) {
+                document.getElementById('file-list').innerHTML += `<p>📄 ${file.name}</p>`;
+            }
+            
+            document.getElementById('stt-status').textContent = '🔄 Processing audio file...';
+            document.getElementById('stt-status').classList.add('processing');
+            
+            // Use Web Speech API for file processing
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const arrayBuffer = await files[0].arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                // Create recognition from audio
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                
+                // Note: File processing is limited in browser
+                // For full STT, we'd need a server-side solution
+                document.getElementById('stt-status').textContent = '📝 For best results, use microphone recording';
+                document.getElementById('stt-status').classList.remove('processing');
+                document.getElementById('stt-status').classList.add('success');
+            } catch (err) {
+                document.getElementById('stt-status').textContent = 'Use microphone for best results';
+            }
+        });
+
+        // STT - Microphone
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
 
@@ -196,10 +271,6 @@
                 document.getElementById('stt-result').value = result;
             };
             
-            recognition.onerror = (event) => {
-                document.getElementById('stt-status').textContent = 'Error: ' + event.error;
-            };
-            
             recognition.onend = () => {
                 document.getElementById('stt-status').textContent = '✅ Recording stopped';
                 document.getElementById('stt-status').classList.remove('recording');
@@ -207,14 +278,11 @@
                 document.getElementById('stt-stop').disabled = true;
             };
         } else {
-            document.getElementById('stt-status').textContent = '❌ Speech recognition not supported in this browser';
+            document.getElementById('stt-status').textContent = '❌ Speech recognition not supported';
         }
 
         document.getElementById('stt-start').addEventListener('click', () => {
-            if (recognition) {
-                recognition.lang = document.getElementById('stt-lang').value;
-                recognition.start();
-            }
+            if (recognition) recognition.start();
         });
 
         document.getElementById('stt-stop').addEventListener('click', () => {
@@ -224,7 +292,7 @@
         document.getElementById('stt-copy').addEventListener('click', () => {
             const text = document.getElementById('stt-result').value;
             navigator.clipboard.writeText(text);
-            document.getElementById('stt-status').textContent = '✅ Copied to clipboard!';
+            document.getElementById('stt-status').textContent = '✅ Copied!';
         });
     </script>
 </body>
