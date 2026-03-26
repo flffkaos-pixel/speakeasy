@@ -4,425 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpeakEasy - Free TTS & STT</title>
+    <meta name="description" content="Free Text-to-Speech and Speech-to-Text tool. Convert text to voice or voice to text in multiple languages.">
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1955893232253258" crossorigin="anonymous"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-        .header h1 { font-size: 2rem; margin-bottom: 10px; }
-        .header p { opacity: 0.9; }
+        .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; text-align: center; }
+        .header h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 0.9rem; }
         
         .tabs { display: flex; border-bottom: 1px solid #eee; }
-        .tab { flex: 1; padding: 20px; text-align: center; cursor: pointer; font-weight: 600; color: #666; transition: all 0.3s; }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #666; }
         .tab.active { color: #667eea; border-bottom: 3px solid #667eea; }
         
-        .content { padding: 30px; }
+        .content { padding: 25px; }
         .section { display: none; }
         .section.active { display: block; }
         
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        select, textarea, input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; }
-        textarea { min-height: 150px; resize: vertical; }
+        select, textarea { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 1rem; }
+        textarea { min-height: 100px; resize: vertical; }
         
-        .btn { display: inline-block; padding: 15px 40px; background: #667eea; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; margin: 5px; }
-        .btn:hover { transform: translateY(-2px); }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn { display: inline-block; padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; margin: 5px 2px; }
         .btn-secondary { background: #764ba2; }
-        .btn-success { background: #28a745; }
-        .btn-danger { background: #dc3545; }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
         
-        .option-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
-        .option-btn { padding: 15px 10px; border: 2px solid #eee; border-radius: 10px; background: white; cursor: pointer; text-align: center; }
-        .option-btn:hover { border-color: #667eea; }
-        .option-btn.active { border-color: #667eea; background: #f0f4ff; }
-        .option-btn span { font-size: 1.5rem; display: block; }
-        .option-btn small { font-size: 0.8rem; color: #666; }
+        .status { padding: 12px; background: #f5f5f5; border-radius: 8px; margin-top: 15px; text-align: center; color: #666; font-size: 0.9rem; }
         
-        .age-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
-        .age-btn { padding: 12px 5px; border: 2px solid #eee; border-radius: 8px; background: white; cursor: pointer; text-align: center; font-size: 0.9rem; }
-        .age-btn:hover { border-color: #667eea; }
-        .age-btn.active { border-color: #667eea; background: #f0f4ff; }
-        
-        .status { padding: 15px; background: #f5f5f5; border-radius: 10px; margin-top: 20px; text-align: center; color: #666; }
-        .status.recording { background: #fee; color: #c00; animation: pulse 1s infinite; }
-        .status.success { background: #efe; color: #060; }
-        
-        .drop-zone { 
-            border: 3px dashed #667eea; 
-            padding: 40px; 
-            text-align: center; 
-            border-radius: 15px; 
-            cursor: pointer;
-            transition: all 0.3s;
-            background: #f8f9ff;
-            margin-bottom: 15px;
-        }
-        .drop-zone:hover, .drop-zone.dragover { 
-            background: #e8ebff; 
-            border-color: #4a5de8;
-        }
-        .drop-zone p { margin: 10px 0; color: #666; }
-        .drop-zone .icon { font-size: 3rem; }
-        
-        .file-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            background: #f5f5f5;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        .file-item .name { flex: 1; font-weight: 500; }
-        .file-item .remove { 
-            background: #dc3545; 
-            color: white; 
-            border: none; 
-            width: 28px; 
-            height: 28px; 
-            border-radius: 50%; 
-            cursor: pointer;
-            font-size: 1.2rem;
-            line-height: 1;
-        }
-        
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .ads-box { background: #f0f0f0; padding: 10px; text-align: center; margin: 15px 0; border-radius: 8px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎙️ SpeakEasy</h1>
-            <p>Free TTS & STT - Multiple Languages</p>
+            <h1>SpeakEasy</h1>
+            <p>Free Text to Speech & Speech to Text</p>
         </div>
         
         <div class="tabs">
-            <div class="tab active" data-tab="tts">TTS (Text to Speech)</div>
-            <div class="tab" data-tab="stt">STT (Speech to Text)</div>
+            <div class="tab active" onclick="showTab('tts')">TTS (Text to Speech)</div>
+            <div class="tab" onclick="showTab('stt')">STT (Speech to Text)</div>
         </div>
         
         <div class="content">
             <!-- TTS Section -->
             <div class="section active" id="tts-section">
                 <div class="form-group">
-                    <label>Select Language</label>
+                    <label>Language / 언어</label>
                     <select id="tts-lang">
-                        <option value="ko-KR">Korean (한국어)</option>
+                        <option value="ko-KR">Korean / 한국어</option>
                         <option value="en-US">English</option>
-                        <option value="ja-JP">Japanese (日本語)</option>
-                        <option value="zh-CN">Chinese (中文)</option>
-                        <option value="es-ES">Spanish (Español)</option>
-                        <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
-                        <option value="th-TH">Thai (ไทย)</option>
-                        <option value="fr-FR">French (Français)</option>
-                        <option value="de-DE">German (Deutsch)</option>
-                        <option value="ru-RU">Russian (Русский)</option>
-                        <option value="ar-SA">Arabic (العربية)</option>
-                        <option value="pt-BR">Portuguese (Português)</option>
-                        <option value="it-IT">Italian (Italiano)</option>
+                        <option value="ja-JP">Japanese /日本語</option>
+                        <option value="zh-CN">Chinese / 中文</option>
+                        <option value="es-ES">Spanish / Español</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label>Gender</label>
-                    <div class="option-grid">
-                        <button class="option-btn active" data-gender="male" onclick="selectGender('male')">
-                            <span>👨</span>
-                            <small>Male</small>
-                        </button>
-                        <button class="option-btn" data-gender="female" onclick="selectGender('female')">
-                            <span>👩</span>
-                            <small>Female</small>
-                        </button>
-                    </div>
+                    <label>Enter Text / 텍스트 입력</label>
+                    <textarea id="tts-text" placeholder="Type here... / 여기에 입력..."></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label>Age</label>
-                    <div class="age-grid">
-                        <button class="age-btn" onclick="selectAge(10)">10s</button>
-                        <button class="age-btn" onclick="selectAge(20)">20s</button>
-                        <button class="age-btn active" onclick="selectAge(30)">30s</button>
-                        <button class="age-btn" onclick="selectAge(40)">40s</button>
-                        <button class="age-btn" onclick="selectAge(50)">50s</button>
-                        <button class="age-btn" onclick="selectAge(60)">60s</button>
-                    </div>
-                </div>
+                <button class="btn" onclick="speak()">🔊 Speak</button>
+                <button class="btn btn-secondary" onclick="stop()">⏹ Stop</button>
                 
-                <div class="form-group">
-                    <label>Voice Speed</label>
-                    <input type="range" id="tts-speed" min="0.5" max="2" step="0.1" value="1" style="width:100%">
-                    <div style="text-align: center; margin-top: 5px;"><span id="speed-val">1.0</span>x</div>
-                </div>
+                <div class="status" id="tts-status">Ready</div>
                 
-                <div class="form-group">
-                    <label>Enter Text</label>
-                    <textarea id="tts-text" placeholder="Enter text to convert to speech..."></textarea>
-                </div>
-                
-                <button id="tts-speak" class="btn" onclick="speakText()">🔊 Speak</button>
-                <button id="tts-stop" class="btn btn-secondary" onclick="stopSpeaking()">⏹ Stop</button>
-                
-                <div class="status" id="tts-status">Ready - Enter text and click Speak</div>
-                
-                <div class="form-group" style="margin-top: 20px;">
-                    <label>Download Audio</label>
-                    <div class="btn-group">
-                        <button class="btn btn-success" onclick="downloadAudio('mp3')" id="dl-mp3" disabled>📥 MP3</button>
-                        <button class="btn btn-success" onclick="downloadAudio('wav')" id="dl-wav" disabled>📥 WAV</button>
-                        <button class="btn btn-success" onclick="downloadAudio('ogg')" id="dl-ogg" disabled>📥 OGG</button>
-                    </div>
+                <!-- AdSense -->
+                <div class="ads-box">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1955893232253258"
+                         data-ad-slot="1234567890"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
                 </div>
             </div>
             
             <!-- STT Section -->
             <div class="section" id="stt-section">
                 <div class="form-group">
-                    <label>Audio Language</label>
+                    <label>Language / 언어</label>
                     <select id="stt-lang">
-                        <option value="ko-KR">Korean (한국어)</option>
+                        <option value="ko-KR">Korean / 한국어</option>
                         <option value="en-US">English</option>
-                        <option value="ja-JP">Japanese (日本語)</option>
-                        <option value="zh-CN">Chinese (中文)</option>
-                        <option value="es-ES">Spanish (Español)</option>
-                        <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
-                        <option value="th-TH">Thai (ไทย)</option>
+                        <option value="ja-JP">Japanese /日本語</option>
+                        <option value="zh-CN">Chinese / 中文</option>
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label>Upload Audio/Video File (Drag & Drop)</label>
-                    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('audio-file').click()">
-                        <div class="icon">📁</div>
-                        <p><strong>Drag & Drop files here</strong></p>
-                        <p style="font-size: 0.8rem; color: #999;">or click to browse</p>
-                        <p style="font-size: 0.75rem; color: #999;">Supported: MP3, WAV, M4A, WEBM, MP4, OGG</p>
-                        <input type="file" id="audio-file" accept="audio/*,video/*" style="display: none" multiple onchange="handleFiles(this.files)">
-                    </div>
-                    <div id="file-list"></div>
+                <button class="btn" onclick="startRecord()">🎤 Start Recording</button>
+                <button class="btn btn-secondary" onclick="stopRecord()">⏹ Stop</button>
+                
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Result / 결과</label>
+                    <textarea id="stt-result" placeholder="Text will appear here... / 결과가 여기에 표시됩니다..."></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label>Or Record Voice</label>
-                    <button class="btn" onclick="startRecording()" id="stt-start">🎤 Start Recording</button>
-                    <button class="btn btn-secondary" onclick="stopRecording()" id="stt-stop" disabled>⏹ Stop</button>
+                <button class="btn" onclick="copyResult()">📋 Copy</button>
+                
+                <div class="status" id="stt-status">Click Start to record</div>
+                
+                <!-- AdSense -->
+                <div class="ads-box">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1955893232253258"
+                         data-ad-slot="1234567890"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
                 </div>
-                
-                <div class="form-group" style="margin-top: 20px;">
-                    <label>Result</label>
-                    <textarea id="stt-result" placeholder="Text will appear here..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Export as</label>
-                    <div class="btn-group">
-                        <button class="btn btn-success" onclick="exportText('txt')">📄 TXT</button>
-                        <button class="btn btn-success" onclick="exportText('doc')">📝 DOC</button>
-                        <button class="btn btn-success" onclick="exportText('json')">📋 JSON</button>
-                        <button class="btn btn-success" onclick="exportText('srt')">🎬 SRT</button>
-                    </div>
-                </div>
-                
-                <button class="btn" onclick="copyText()">📋 Copy to Clipboard</button>
-                
-                <div class="status recording" id="stt-status">Upload a file or click Start to record</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Global variables
-        let currentGender = 'male';
-        let currentAge = 30;
-        let uploadedFiles = [];
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let audioBlob = null;
-        let recognition = null;
+        // Tab switching
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + '-section').classList.add('active');
+        }
+        
+        // TTS
         const synth = window.speechSynthesis;
         
-        // Initialize voices
-        let voices = [];
-        synth.onvoiceschanged = () => { voices = synth.getVoices(); };
-        
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab + '-section').classList.add('active');
-            });
-        });
-        
-        // Gender selection
-        function selectGender(gender) {
-            currentGender = gender;
-            document.querySelectorAll('.option-btn[data-gender]').forEach(b => b.classList.remove('active'));
-            document.querySelector(`[data-gender="${gender}"]`).classList.add('active');
-        }
-        
-        // Age selection
-        function selectAge(age) {
-            currentAge = age;
-            document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector(`[data-age="${age}"]`)?.classList.add('active');
-            event.target.classList.add('active');
-        }
-        
-        // Speed slider
-        document.getElementById('tts-speed').addEventListener('input', (e) => {
-            document.getElementById('speed-val').textContent = e.target.value;
-        });
-        
-        // TTS - Speak
-        function speakText() {
+        function speak() {
             const text = document.getElementById('tts-text').value;
             if (!text) {
-                document.getElementById('tts-status').textContent = 'Please enter text first';
+                document.getElementById('tts-status').textContent = 'Please enter text';
                 return;
             }
-            
             if (synth.speaking) synth.cancel();
             
             const utterance = new SpeechSynthesisUtterance(text);
-            const lang = document.getElementById('tts-lang').value;
-            const userSpeed = parseFloat(document.getElementById('tts-speed').value);
+            utterance.lang = document.getElementById('tts-lang').value;
             
-            utterance.lang = lang;
-            
-            // Age and gender adjustments
-            const pitchMap = { male: 0.9, female: 1.2 };
-            const rateMap = { 10: 1.2, 20: 1.1, 30: 1.0, 40: 0.95, 50: 0.9, 60: 0.85 };
-            
-            utterance.pitch = pitchMap[currentGender] * (rateMap[currentAge] || 1);
-            utterance.rate = (rateMap[currentAge] || 1) * userSpeed;
-            
-            // Find matching voice
-            setTimeout(() => {
-                const matchingVoice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-                if (matchingVoice) utterance.voice = matchingVoice;
-            }, 100);
-            
-            utterance.onstart = () => {
-                document.getElementById('tts-status').textContent = `🔊 Speaking... (${currentGender}, ${currentAge}s)`;
-            };
-            
-            utterance.onend = () => {
-                document.getElementById('tts-status').textContent = '✅ Done!';
-                enableDownloads();
-            };
+            utterance.onstart = () => document.getElementById('tts-status').textContent = 'Speaking...';
+            utterance.onend = () => document.getElementById('tts-status').textContent = 'Done!';
             
             synth.speak(utterance);
         }
         
-        function stopSpeaking() {
+        function stop() {
             synth.cancel();
-            document.getElementById('tts-status').textContent = '⏹ Stopped';
+            document.getElementById('tts-status').textContent = 'Stopped';
         }
         
-        // TTS - Download (using MediaRecorder to capture audio)
-        function enableDownloads() {
-            document.getElementById('dl-mp3').disabled = false;
-            document.getElementById('dl-wav').disabled = false;
-            document.getElementById('dl-ogg').disabled = false;
-        }
+        // STT
+        let recognition = null;
         
-        function downloadAudio(format) {
-            if (!audioBlob) {
-                // Create a simple beep as placeholder (browsers can't capture TTS directly)
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = 440;
-                gain.gain.value = 0.1;
-                osc.start();
-                osc.stop(0.5);
-                
-                audioBlob = new Blob([new Uint8Array(0)], { type: 'audio/wav' });
-            }
-            
-            const url = URL.createObjectURL(audioBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `speech.${format}`;
-            a.click();
-            URL.revokeObjectURL(url);
-            document.getElementById('tts-status').textContent = `✅ Downloaded speech.${format}`;
-        }
-        
-        // STT - Drag and Drop
-        const dropZone = document.getElementById('drop-zone');
-        
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-        
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-        
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
-        
-        function handleFiles(files) {
-            if (!files.length) return;
-            
-            for (const file of files) {
-                if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
-                    const index = uploadedFiles.length;
-                    uploadedFiles.push(file);
-                    addFileToList(file, index);
-                }
-            }
-            
-            // Process first file
-            if (uploadedFiles.length > 0) {
-                processAudio(uploadedFiles[0]);
-            }
-        }
-        
-        function addFileToList(file, index) {
-            const fileList = document.getElementById('file-list');
-            const fileItem = document.createElement('div');
-            fileItem.className = 'file-item';
-            fileItem.id = `file-${index}`;
-            fileItem.innerHTML = `
-                <span class="name">📄 ${file.name}</span>
-                <button class="remove" onclick="removeFile(${index})">×</button>
-            `;
-            fileList.appendChild(fileItem);
-        }
-        
-        function removeFile(index) {
-            uploadedFiles.splice(index, 1);
-            // Re-render list
-            const fileList = document.getElementById('file-list');
-            fileList.innerHTML = '';
-            uploadedFiles.forEach((f, i) => addFileToList(f, i));
-        }
-        
-        function processAudio(file) {
-            document.getElementById('stt-status').textContent = '🔄 Processing audio...';
-            
-            // Use Speech Recognition API
+        function startRecord() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                document.getElementById('stt-status').textContent = '❌ Speech recognition not supported';
+                document.getElementById('stt-status').textContent = 'Not supported in this browser';
                 return;
             }
             
             recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
             recognition.lang = document.getElementById('stt-lang').value;
+            recognition.continuous = true;
             
             recognition.onresult = (event) => {
                 let result = '';
@@ -432,99 +178,26 @@
                 document.getElementById('stt-result').value = result;
             };
             
-            recognition.onend = () => {
-                document.getElementById('stt-status').textContent = '✅ Transcription complete';
-            };
-            
-            recognition.onerror = (e) => {
-                document.getElementById('stt-status').textContent = 'Error: ' + e.error;
-            };
+            recognition.onstart = () => document.getElementById('stt-status').textContent = 'Recording...';
+            recognition.onend = () => document.getElementById('stt-status').textContent = 'Stopped';
             
             recognition.start();
         }
         
-        // STT - Recording
-        function startRecording() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                document.getElementById('stt-status').textContent = '❌ Speech recognition not supported';
-                return;
-            }
-            
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = document.getElementById('stt-lang').value;
-            
-            recognition.onstart = () => {
-                document.getElementById('stt-status').textContent = '🎤 Recording...';
-                document.getElementById('stt-status').classList.add('recording');
-                document.getElementById('stt-start').disabled = true;
-                document.getElementById('stt-stop').disabled = false;
-            };
-            
-            recognition.onresult = (event) => {
-                let result = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    result += event.results[i][0].transcript;
-                }
-                document.getElementById('stt-result').value = result;
-            };
-            
-            recognition.onend = () => {
-                document.getElementById('stt-status').textContent = '✅ Recording stopped';
-                document.getElementById('stt-status').classList.remove('recording');
-                document.getElementById('stt-start').disabled = false;
-                document.getElementById('stt-stop').disabled = true;
-            };
-            
-            recognition.start();
-        }
-        
-        function stopRecording() {
+        function stopRecord() {
             if (recognition) recognition.stop();
         }
         
-        // Export functions
-        function exportText(format) {
-            const text = document.getElementById('stt-result').value;
-            if (!text) return;
-            
-            let blob, filename;
-            
-            if (format === 'txt') {
-                blob = new Blob([text], { type: 'text/plain' });
-                filename = 'transcript.txt';
-            } else if (format === 'doc') {
-                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre>${text}</pre></body></html>`;
-                blob = new Blob([html], { type: 'application/msword' });
-                filename = 'transcript.doc';
-            } else if (format === 'json') {
-                const data = { text, timestamp: new Date().toISOString() };
-                blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                filename = 'transcript.json';
-            } else if (format === 'srt') {
-                const srt = `1\n00:00:00,000 --> 00:00:10,000\n${text}\n\n`;
-                blob = new Blob([srt], { type: 'text/srt' });
-                filename = 'transcript.srt';
-            }
-            
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-            document.getElementById('stt-status').textContent = `✅ Downloaded ${filename}`;
-        }
-        
-        function copyText() {
+        function copyResult() {
             const text = document.getElementById('stt-result').value;
             if (text) {
                 navigator.clipboard.writeText(text);
-                document.getElementById('stt-status').textContent = '✅ Copied to clipboard!';
+                document.getElementById('stt-status').textContent = 'Copied!';
             }
         }
+        
+        // Load AdSense
+        (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
 </body>
 </html>
